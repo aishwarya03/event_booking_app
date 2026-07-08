@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  ORGANISER
+  ATTENDEE
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role
+  createdAt DateTime @default(now())
+
+  events   Event[]
+  bookings Booking[]
+}
+
+model Event {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  location    String
+  startsAt    DateTime
+  createdAt   DateTime @default(now())
+
+  organiserId Int
+  organiser   User @relation(fields: [organiserId], references: [id])
+
+  ticketTiers TicketTier[]
+}
+
+model TicketTier {
+  id                Int    @id @default(autoincrement())
+  name              String
+  price             Float
+  totalQuantity     Int
+  remainingQuantity Int
+
+  eventId Int
+  event   Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  bookings Booking[]
+}
+
+model Booking {
+  id         Int      @id @default(autoincrement())
+  quantity   Int
+  totalPrice Float
+  createdAt  DateTime @default(now())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  ticketTierId Int
+  ticketTier   TicketTier @relation(fields: [ticketTierId], references: [id], onDelete: Cascade)
+}
